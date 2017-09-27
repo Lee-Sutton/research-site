@@ -9,6 +9,9 @@ class Board(models.Model):
     def __repr__(self):
         """
         Overrides the default repr method to return the board name
+
+        Returns: String representation of the board object
+            TYPE: str
         """
         return 'Board: ' + self.name
 
