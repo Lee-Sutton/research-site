@@ -6,14 +6,8 @@ class Board(models.Model):
     name = models.CharField(max_length=30, unique=True)
     description = models.CharField(max_length=100)
 
-    def __repr__(self):
-        """
-        Overrides the default repr method to return the board name
-
-        Returns: String representation of the board object
-            TYPE: str
-        """
-        return 'Board: ' + self.name
+    def __str__(self):
+        return self.name
 
 
 class Topic(models.Model):
