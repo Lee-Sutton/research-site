@@ -4,8 +4,9 @@ Unit tests for boards application
 from django.core.urlresolvers import reverse
 from django.urls import resolve
 from django.test import TestCase
-from boards.views import home, board_topics
-from boards.models import Board
+from django.contrib.auth.models import User
+from boards.views import home, board_topics, new_topic
+from boards.models import Board, Topic, Post
 
 
 class HomeTests(TestCase):
@@ -58,6 +59,8 @@ class NewTopicsTest(TestCase):
 
     def setUp(self):
         Board.objects.create(name='Django', description='Django Board.')
+        User.objects.create_user(username='john', email='john@doe.com',
+                                 password=123)
 
     def test_new_topic_view_success_status_code(self):
         """
@@ -80,4 +83,54 @@ class NewTopicsTest(TestCase):
         The new topic url should resolve to the new topic view
         function
         """
-        self.fail('Need to write this test')
+        view = resolve('/boards/1/new/')
+        self.assertEquals(view.func, new_topic)
+
+    def test_new_topic_view_contains_link_to_boards(self):
+        """Checks that the new topic view contains link back to boards view"""
+        new_topic_url = reverse('new_topic', kwargs={'pk': 1})
+        board_topics_url = reverse('board_topics', kwargs={'pk': 1})
+        response = self.client.get(new_topic_url)
+        self.assertContains(response, 'href="{0}"'.format(board_topics_url))
+
+    def test_board_topics_view_contains_navigation_links(self):
+        """Checks that topics view contains the correct links"""
+        board_topics_url = reverse('board_topics', kwargs={'pk': 1})
+        homepage_url = reverse('home')
+        new_topic_url = reverse('new_topic', kwargs={'pk': 1})
+
+        response = self.client.get(board_topics_url)
+        self.assertContains(response, 'href="{0}"'.format(homepage_url))
+        self.assertContains(response, 'href="{0}"'.format(new_topic_url))
+
+    def test_csrf(self):
+        """Tests the csrf token in the form pages"""
+        url = reverse('new_topic', kwargs={'pk': 1})
+        response = self.client.get(url)
+        self.assertContains(response, 'csrfmiddlewaretoken')
+
+    def test_new_topic_valid_post_data(self):
+        """User inputs valid post data"""
+        url = reverse('new_topic', kwargs={'pk': 1})
+        data = {
+            'subject': 'Test title',
+            'message': 'Lorem ipsum dolor sit amet'
+        }
+        self.client.post(url, data)
+        self.assertTrue(Topic.objects.exists())
+        self.assertTrue(Post.objects.exists())
+
+    def test_new_topic_invalid_post_data(self):
+        """Invalid post data should not redirect"""
+        url = reverse('new_topic', kwargs={'pk': 1})
+        response = self.client.post(url, {})
+        self.assertEquals(response.status_code, 200)
+
+    def test_new_topic_invalid_post_data_empty_fields(self):
+        """new topic with invalid fields should not redirect"""
+        url = reverse('new_topic', kwargs={'pk': 1})
+        data = dict(subject='', message='')
+        response = self.client.post(url, data)
+        self.assertEquals(response.status_code, 200)
+        self.assertFalse(Topic.objects.exists())
+        self.assertFalse(Post.objects.exists())

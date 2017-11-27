@@ -12,3 +12,4 @@ lib64
 *.pyc
 *.pyo
 *.sublime-workspace
+/boards/research-site.sublime-project
