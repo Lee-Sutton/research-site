@@ -37,8 +37,8 @@ def new_topic(request, pk):
             topic.starter = user
             topic.save()
             Post.objects.create(message=form.cleaned_data.get('message'),
-                               topic=topic,
-                               created_by=user)
+                                topic=topic,
+                                created_by=user)
             return redirect('board_topics', pk=board.pk)
 
     else:
