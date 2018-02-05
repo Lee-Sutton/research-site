@@ -14,3 +14,4 @@ lib64
 *.sublime-workspace
 .vscode/**
 /boards/research-site.sublime-project
+.cache/**
