@@ -1,7 +1,8 @@
+"""Views for the forms application"""
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.models import User
 from boards.forms import NewTopicForm
-from .models import Board, Topic, Post
+from boards.models import Board, Post
 
 
 def home(request):

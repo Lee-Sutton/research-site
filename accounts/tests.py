@@ -33,13 +33,24 @@ class SignUpTests(TestCase):
         form = self.response.context.get('form')
         self.assertIsInstance(form, UserCreationForm)
 
+    def test_form_inputs(self):
+        """View must contain 5 inputs: crsf, username, email,
+        password1, password2
+        """
+        self.assertContains(self.response, '<input', 5)
+        self.assertContains(self.response, 'type="text"', 1)
+        self.assertContains(self.response, 'type="email"', 1)
+        self.assertContains(self.response, 'type="password"', 2)
+
 
 class SuccessfulSignUpTests(TestCase):
+    """Unit tests for for when a user successfully signs up"""
 
     def setUp(self):
         url = reverse('signup')
         data = {
             'username': 'john',
+            'email': 'john@doe.com',
             'password1': 'abcdef123456',
             'password2': 'abcdef123456'
         }
@@ -64,3 +75,24 @@ class SuccessfulSignUpTests(TestCase):
         response = self.client.get(self.home_url)
         user = response.context.get('user')
         self.assertTrue(user.is_authenticated)
+
+
+class InvalidSignupTests(TestCase):
+    """Unit tests for invalid user creation"""
+    def setUp(self):
+        url = reverse('signup')
+        # The user submits an empty form
+        self.response = self.client.post(url, {})
+
+    def test_signup_status_code(self):
+        """Invalid form submission should return to the same page"""
+        self.assertEqual(self.response.status_code, 200)
+
+    def test_form_errors(self):
+        form = self.response.context.get('form')
+        self.assertTrue(form.errors)
+
+    def test_dont_create_user(self):
+        """A user should not be created when an invalid form is submitted"""
+        self.assertFalse(User.objects.exists())
+
